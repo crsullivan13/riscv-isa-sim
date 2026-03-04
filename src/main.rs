@@ -17,6 +17,17 @@ impl Cpu {
     fn new() -> Self {
         Cpu { reg_file: [0; 32], pc: 0 }
     }
+
+    fn set_reg(&mut self, reg: usize, value: u32) {
+        // reg0 is always 0
+        if reg != 0 {
+            self.reg_file[reg] = value;
+        }
+    }
+
+    fn get_reg(&self, reg: usize) -> u32 {
+        self.reg_file[reg]
+    }
 }
 
 struct Memory {
@@ -85,10 +96,15 @@ impl Memory {
 mod tests {
     use super::*;
 
+    fn mk_cpu() -> Cpu {
+        Cpu { reg_file: [0;32], pc: 0x100 }
+    }
+
     fn mk_mem() -> Memory {
         Memory { data_array: vec![0;20], base: 0x1000 }
     }
 
+    // Memory tests
     #[test]
     fn u8_store_load_roundtrip() {
         let mut mem = mk_mem();
@@ -147,5 +163,15 @@ mod tests {
             Err(Trap::OutOfBounds(a)) => assert_eq!(a, 0x10000),
             _ => panic!("expected OutOfBounds"),
         }
+    }
+    // End memory tests
+
+    // Cpu tests
+    #[test]
+    fn reg0_is_always_zero() {
+        let mut cpu = mk_cpu();
+
+        cpu.set_reg(0, 42);
+        assert_eq!(cpu.get_reg(0), 0);
     }
 }
