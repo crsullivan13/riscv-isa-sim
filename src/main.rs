@@ -1,8 +1,10 @@
 #[derive(Debug)]
 enum Trap {
+    MisalignedFetch(u32),
     MisalignedLoad(u32),
     MisalignedStore(u32),
     OutOfBounds(u32),
+    InvalidInstruction(u32),
 }
 
 fn main() {
@@ -90,6 +92,48 @@ impl Memory {
 
         Ok(())
     }
+}
+
+fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
+    if cpu.pc % 4 != 0 {
+        return Err(Trap::MisalignedFetch(cpu.pc));
+    }
+
+    let instr = mem.load_u32(cpu.pc)?;
+    let pc_next = cpu.pc + 4;
+
+    let opcode = instr & 0x7F;
+    let rd = ( instr >> 7 ) & 0x1F;
+    let funct3 = ( instr >> 12 ) & 0x7;
+    let rs1 = ( instr >> 15 ) & 0x1F;
+    let rs2 = ( instr >> 20 ) & 0x1F;
+    let funct7 = ( instr >> 25 ) & 0x7F;
+
+    match opcode {
+        0b0110011 => {
+            let a = cpu.get_reg(rs1 as usize);
+            let b = cpu.get_reg(rs2 as usize);
+            let result = match (funct3, funct7) {
+                (0b000, 0b000_0000) => a + b, // ADD
+                (0b000, 0b010_0000) => a - b, // SUB
+                (0b111, 0b000_0000) => a & b, // AND
+                (0b110, 0b000_0000) => a | b, // OR
+                (0b100, 0b000_0000) => a ^ b, // XOR
+                (0b001, 0b000_0000) => a << ( b & 0x1F) , // Shift Left Logical
+                (0b101, 0b000_0000) => a >> ( b & 0x1F ), // Shift Right Logical
+                (0b101, 0b010_0000) => ( ( a as i32 ) >> ( b & 0x1F ) ) as u32, // Shift Right Arithmetic
+                (0b010, 0b000_0000) => ( ( a as i32 ) < ( b as i32 ) ) as u32, // Set Less Than
+                (0b011, 0b000_0000) => ( a < b ) as u32, // Set Less Than Unsigned
+                _ => return  Err(Trap::InvalidInstruction(instr))
+            };
+            cpu.set_reg(rd as usize, result);
+            cpu.pc = pc_next;
+        }
+        _ => return  Err(Trap::InvalidInstruction(instr))
+    }
+
+
+    Ok(())
 }
 
 #[cfg(test)]
