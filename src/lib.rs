@@ -14,7 +14,7 @@ pub fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
     }
 
     let instr = mem.load_u32(cpu.pc())?;
-    let pc_next = cpu.pc() + 4;
+    let pc_next = cpu.pc().wrapping_add(4);
 
     let opcode = instr & 0x7F;
     let rd = (instr >> 7) & 0x1F;
@@ -29,8 +29,8 @@ pub fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
             let b = cpu.get_reg(rs2 as usize);
             let shift = b & 0x1F;
             let result = match (funct3, funct7) {
-                (0b000, 0b000_0000) => a + b,
-                (0b000, 0b010_0000) => a - b,
+                (0b000, 0b000_0000) => a.wrapping_add(b),
+                (0b000, 0b010_0000) => a.wrapping_sub(b),
                 (0b111, 0b000_0000) => a & b,
                 (0b110, 0b000_0000) => a | b,
                 (0b100, 0b000_0000) => a ^ b,
