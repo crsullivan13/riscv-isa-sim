@@ -16,6 +16,23 @@ fn add_instruction_executes() {
 }
 
 #[test]
+fn sub_instruction_executes() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+
+    cpu.set_reg(1, 42);
+    cpu.set_reg(2, 41);
+    mem.store_u32(0, encode_rtype(RType::SUB, 1, 2, 3)).unwrap();
+
+    step(&mut cpu, &mut mem).unwrap();
+
+    assert_eq!(cpu.get_reg(3), 1);
+    assert_eq!(cpu.pc(), 4);
+}
+
+// TODO: Make one test for all RType to see that they execute properly
+
+#[test]
 fn aligned_fetch_error() {
     let mut cpu = Cpu::new();
     let mut mem = Memory::new(64, 0x0);

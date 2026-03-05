@@ -1,11 +1,13 @@
 pub enum RType {
     ADD,
+    SUB,
 }
 
 impl RType {
     pub fn funct(self) -> (u32, u32) {
         match self {
             RType::ADD => (0b000_0000, 0b000),
+            RType::SUB => (0b010_0000, 0b000),
         }
     }
 }
