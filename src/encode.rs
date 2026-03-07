@@ -45,32 +45,42 @@ pub enum IType {
     XORI,
     ORI,
     ANDI,
-    SLLI,
-    SRLI,
-    SRAI,
     SLTI,
     SLTIU,
 }
 
 impl IType {
+    pub fn funct(self) -> u32 {
+        match self {
+            IType::ADDI  => 0x0,
+            IType::XORI  => 0x4,
+            IType::ORI   => 0x6,
+            IType::ANDI  => 0x7,
+            IType::SLTI  => 0x2,
+            IType::SLTIU => 0x3,
+        }
+    }
+}
+
+pub enum ITypeShift {
+    SLLI,
+    SRLI,
+    SRAI,
+}
+
+impl ITypeShift {
     pub fn funct(self) -> (u32, u32) {
         match self {
-            IType::ADDI  => (0x0, 0b000_0000),
-            IType::XORI  => (0x4, 0b000_0000),
-            IType::ORI   => (0x6, 0b000_0000),
-            IType::ANDI  => (0x7, 0b000_0000),
-            IType::SLLI  => (0x1, 0b000_0000),
-            IType::SRLI  => (0x5, 0b000_0000),
-            IType::SRAI  => (0x5, 0b010_0000),
-            IType::SLTI  => (0x2, 0b000_0000),
-            IType::SLTIU => (0x3, 0b000_0000),
+            ITypeShift::SLLI  => (0x1, 0b000_0000),
+            ITypeShift::SRLI  => (0x5, 0b000_0000),
+            ITypeShift::SRAI  => (0x5, 0b010_0000),
         }
     }
 }
 
 pub fn encode_itype(op: IType, rs1: u32, imm: i32, rd: u32) -> u32 {
     let opcode = 0b001_0011;
-    let (funct3, _) = op.funct();
+    let funct3 = op.funct();
 
     ((imm as u32) & 0xFFF) << 20
         | (rs1 & 0x1F) << 15
@@ -79,7 +89,7 @@ pub fn encode_itype(op: IType, rs1: u32, imm: i32, rd: u32) -> u32 {
         | opcode
 }
 
-pub fn encode_itype_shift(op: IType, rs1: u32, shamt: u32, rd: u32) -> u32 {
+pub fn encode_itype_shift(op: ITypeShift, rs1: u32, shamt: u32, rd: u32) -> u32 {
     let opcode = 0b001_0011;
     let (funct3, funct7) = op.funct();
 

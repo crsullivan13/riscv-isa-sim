@@ -13,7 +13,7 @@ impl Memory {
         }
     }
 
-    fn address_to_index(&self, addr: u32) -> Result<u32, Trap> {
+    fn address_to_index(&self, addr: u32) -> Result<usize, Trap> {
         if addr < self.base {
             return Err(Trap::OutOfBounds(addr));
         }
@@ -24,17 +24,17 @@ impl Memory {
             return Err(Trap::OutOfBounds(addr));
         }
 
-        Ok(index)
+        Ok(index as usize)
     }
 
     pub fn load_u8(&self, addr: u32) -> Result<u8, Trap> {
         let index = self.address_to_index(addr)?;
-        Ok(self.data_array[index as usize])
+        Ok(self.data_array[index])
     }
 
     pub fn store_u8(&mut self, addr: u32, value: u8) -> Result<(), Trap> {
         let index = self.address_to_index(addr)?;
-        self.data_array[index as usize] = value;
+        self.data_array[index] = value;
         Ok(())
     }
 
@@ -43,7 +43,7 @@ impl Memory {
             return Err(Trap::MisalignedLoad(addr));
         }
 
-        let b1 = self.load_u8(addr + 0)? as u32;
+        let b1 = self.load_u8(addr)? as u32;
         let b2 = self.load_u8(addr + 1)? as u32;
         let b3 = self.load_u8(addr + 2)? as u32;
         let b4 = self.load_u8(addr + 3)? as u32;
@@ -56,7 +56,7 @@ impl Memory {
             return Err(Trap::MisalignedStore(addr));
         }
 
-        self.store_u8(addr + 0, (value & 0xff) as u8)?;
+        self.store_u8(addr, (value & 0xff) as u8)?;
         self.store_u8(addr + 1, ((value >> 8) & 0xff) as u8)?;
         self.store_u8(addr + 2, ((value >> 16) & 0xff) as u8)?;
         self.store_u8(addr + 3, ((value >> 24) & 0xff) as u8)?;

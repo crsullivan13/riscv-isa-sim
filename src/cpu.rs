@@ -1,3 +1,5 @@
+// Default trait used when it makes sense to default to all zeros
+#[derive(Default)]
 pub struct Cpu {
     reg_file: [u32; 32],
     pc: u32,
@@ -5,10 +7,7 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new() -> Self {
-        Cpu {
-            reg_file: [0; 32],
-            pc: 0,
-        }
+        Self::default()
     }
 
     pub fn pc(&self) -> u32 {
@@ -27,6 +26,7 @@ impl Cpu {
     }
 
     pub fn get_reg(&self, reg: usize) -> u32 {
+        assert!(reg < 32);
         self.reg_file[reg]
     }
 }
