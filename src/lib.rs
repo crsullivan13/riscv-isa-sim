@@ -4,7 +4,7 @@ pub mod memory;
 pub mod trap;
 
 pub use cpu::Cpu;
-pub use encode::{encode_rtype, RType};
+pub use encode::{encode_itype, encode_itype_shift, encode_rtype, IType, RType};
 pub use memory::Memory;
 pub use trap::Trap;
 
