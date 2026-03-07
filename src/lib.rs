@@ -24,21 +24,40 @@ pub fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
     let funct7 = (instr >> 25) & 0x7F;
 
     match opcode {
-        0b0110011 => {
+        0b011_0011 => {
             let a = cpu.get_reg(rs1 as usize);
             let b = cpu.get_reg(rs2 as usize);
             let shift = b & 0x1F;
             let result = match (funct3, funct7) {
-                (0b000, 0b000_0000) => a.wrapping_add(b),
-                (0b000, 0b010_0000) => a.wrapping_sub(b),
-                (0b111, 0b000_0000) => a & b,
-                (0b110, 0b000_0000) => a | b,
-                (0b100, 0b000_0000) => a ^ b,
-                (0b001, 0b000_0000) => a << shift,
-                (0b101, 0b000_0000) => a >> shift,
-                (0b101, 0b010_0000) => ((a as i32) >> shift) as u32,
-                (0b010, 0b000_0000) => ((a as i32) < (b as i32)) as u32,
-                (0b011, 0b000_0000) => (a < b) as u32,
+                (0x0, 0b000_0000) => a.wrapping_add(b),
+                (0x0, 0b010_0000) => a.wrapping_sub(b),
+                (0x7, 0b000_0000) => a & b,
+                (0x6, 0b000_0000) => a | b,
+                (0x4, 0b000_0000) => a ^ b,
+                (0x1, 0b000_0000) => a << shift,
+                (0x5, 0b000_0000) => a >> shift,
+                (0x5, 0b010_0000) => ((a as i32) >> shift) as u32,
+                (0x2, 0b000_0000) => ((a as i32) < (b as i32)) as u32,
+                (0x3, 0b000_0000) => (a < b) as u32,
+                _ => return Err(Trap::InvalidInstruction(instr)),
+            };
+            cpu.set_reg(rd as usize, result);
+            cpu.set_pc(pc_next);
+        }
+        0b001_0011 => {
+            let a = cpu.get_reg(rs1 as usize);
+            let b = i_imm(instr);
+            let shift = b & 0x1F;
+            let result = match (funct3, funct7) {
+                (0x0, _) => a.wrapping_add(b),
+                (0x4, _) => a ^ b,
+                (0x6, _) => a | b,
+                (0x7, _) => a & b,
+                (0x1, 0b000_0000) => a << shift,
+                (0x5, 0b000_0000) => a >> shift,
+                (0x5, 0b010_0000) => ((a as i32) >> shift) as u32,
+                (0x2, _) => ((a as i32) < (b as i32)) as u32,
+                (0x3, _) => (a < b) as u32,
                 _ => return Err(Trap::InvalidInstruction(instr)),
             };
             cpu.set_reg(rd as usize, result);
@@ -48,4 +67,8 @@ pub fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
     }
 
     Ok(())
+}
+
+fn i_imm(instr: u32) -> u32 {
+    ((instr as i32) >> 20) as u32
 }
