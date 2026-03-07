@@ -4,7 +4,7 @@ pub mod memory;
 pub mod trap;
 
 pub use cpu::Cpu;
-pub use encode::{encode_itype, encode_itype_shift, encode_load, encode_rtype, IType, ITypeShift, Load, RType};
+pub use encode::{encode_itype, encode_itype_shift, encode_load, encode_rtype, encode_store, IType, ITypeShift, Load, RType, Store};
 pub use memory::Memory;
 pub use trap::Trap;
 
@@ -78,6 +78,18 @@ pub fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
             cpu.set_reg(rd as usize, result);
             cpu.set_pc(pc_next);
         }
+        0b010_0011 => {
+            let a = cpu.get_reg(rs1 as usize);
+            let b = cpu.get_reg(rs2 as usize);
+            let imm = s_imm(instr);
+            match funct3 {
+                0x0 => mem.store_u8(a.wrapping_add(imm), (b & 0xFF) as u8)?,
+                0x1 => mem.store_u16(a.wrapping_add(imm), (b & 0xFFFF) as u16)?,
+                0x2 => mem.store_u32(a.wrapping_add(imm), b)?,
+                _ => return Err(Trap::InvalidInstruction(instr)),
+            };
+            cpu.set_pc(pc_next);
+        }
         _ => return Err(Trap::InvalidInstruction(instr)),
     }
 
@@ -86,4 +98,9 @@ pub fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
 
 fn i_imm(instr: u32) -> u32 {
     ((instr as i32) >> 20) as u32
+}
+
+fn s_imm(instr: u32) -> u32 {
+    let imm = (instr & 0xFE00_0000) | ((instr & 0x0000_0F80) << 13);
+    ((imm as i32) >> 20) as u32
 }

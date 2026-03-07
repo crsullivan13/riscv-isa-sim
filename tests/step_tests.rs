@@ -1,4 +1,4 @@
-use riscv_isa_sim::{encode_itype, encode_itype_shift, encode_load, encode_rtype, step, Cpu, IType, ITypeShift, Load, Memory, RType, Trap};
+use riscv_isa_sim::{encode_itype, encode_itype_shift, encode_load, encode_rtype, encode_store, step, Cpu, IType, ITypeShift, Load, Memory, RType, Store, Trap};
 
 // --- R-type ---
 
@@ -217,6 +217,7 @@ fn sltiu_executes() {
 }
 
 // -- Loads --
+
 #[test]
 fn lb_executes() {
     let mut cpu = Cpu::new();
@@ -265,6 +266,39 @@ fn lhu_executes() {
     mem.store_u32(0x4, 0xDEAD_FFFF).unwrap();
     step(&mut cpu, &mut mem).unwrap();
     assert_eq!(cpu.get_reg(2), 0xFFFF);
+}
+
+// --- Stores ---
+
+#[test]
+fn sb_executes() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(2, 0xDEAD_BEEF);
+    mem.store_u32(0x0, encode_store(Store::SB, 1, 2, 4)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(mem.load_u32(0x4).unwrap(), cpu.get_reg(2) & 0xFF);
+}
+
+#[test]
+fn sh_executes() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(2, 0xDEAD_BEEF);
+    mem.store_u32(0x0, encode_store(Store::SH, 1, 2, 4)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(mem.load_u32(0x4).unwrap(), cpu.get_reg(2) & 0xFFFF);
+}
+
+#[test]
+fn sw_executes() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(2, 0xDEAD_BEEF);
+    cpu.set_reg(1, 8);
+    mem.store_u32(0x0, encode_store(Store::SW, 1, 2, -4)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(mem.load_u32(0x4).unwrap(), cpu.get_reg(2));
 }
 
 // --- Traps ---

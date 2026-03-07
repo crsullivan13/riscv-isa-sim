@@ -131,3 +131,33 @@ pub fn encode_load(op: Load, rs1: u32, imm: i32, rd: u32) -> u32 {
         | (rd & 0x1F) << 7
         | opcode
 }
+
+pub enum Store {
+    SB,
+    SH,
+    SW,
+}
+
+impl Store {
+    pub fn funct(self) -> u32 {
+        match self {
+            Store::SB => 0x0,
+            Store::SH => 0x1,
+            Store::SW => 0x2,
+        }
+    }
+}
+
+pub fn encode_store(op: Store, rs1: u32, rs2: u32, imm: i32) -> u32 {
+    let opcode = 0b010_0011;
+    let funct3 = op.funct();
+    let imm_lower = (imm as u32) & 0x1F;
+    let imm_upper = ((imm as u32) & 0xFE0) >> 5;
+
+    imm_upper << 25
+        | (rs2 & 0x1F) << 20
+        | (rs1 & 0x1F) << 15
+        | funct3 << 12
+        | imm_lower << 7
+        | opcode
+}
