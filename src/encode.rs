@@ -100,3 +100,34 @@ pub fn encode_itype_shift(op: ITypeShift, rs1: u32, shamt: u32, rd: u32) -> u32 
         | (rd & 0x1F) << 7
         | opcode
 }
+
+pub enum Load {
+    LB,
+    LH,
+    LW,
+    LBU,
+    LHU,
+}
+
+impl Load {
+    pub fn funct(self) -> u32 {
+        match self {
+            Load::LB  => 0x0,
+            Load::LH  => 0x1,
+            Load::LW  => 0x2,
+            Load::LBU => 0x4,
+            Load::LHU => 0x5,
+        }
+    }
+}
+
+pub fn encode_load(op: Load, rs1: u32, imm: i32, rd: u32) -> u32 {
+    let opcode = 0b000_0011;
+    let funct3 = op.funct();
+
+    ((imm as u32) & 0xFFF) << 20
+        | (rs1 & 0x1F) << 15
+        | funct3 << 12
+        | (rd & 0x1F) << 7
+        | opcode
+}

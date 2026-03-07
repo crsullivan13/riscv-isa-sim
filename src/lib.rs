@@ -4,7 +4,7 @@ pub mod memory;
 pub mod trap;
 
 pub use cpu::Cpu;
-pub use encode::{encode_itype, encode_itype_shift, encode_rtype, IType, ITypeShift, RType};
+pub use encode::{encode_itype, encode_itype_shift, encode_load, encode_rtype, IType, ITypeShift, Load, RType};
 pub use memory::Memory;
 pub use trap::Trap;
 
@@ -58,6 +58,21 @@ pub fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
                 (0x5, 0b010_0000) => ((a as i32) >> shift) as u32,
                 (0x2, _) => ((a as i32) < (b as i32)) as u32,
                 (0x3, _) => (a < b) as u32,
+                _ => return Err(Trap::InvalidInstruction(instr)),
+            };
+            cpu.set_reg(rd as usize, result);
+            cpu.set_pc(pc_next);
+        }
+        0b000_0011 => {
+            let a = cpu.get_reg(rs1 as usize);
+            let b = i_imm(instr);
+            let result = match funct3 {
+                // rust sign extends when casting from signed to wider type
+                0x0 => mem.load_u8(a.wrapping_add(b))? as i8 as u32,
+                0x1 => mem.load_u16(a.wrapping_add(b))? as i16 as u32,
+                0x2 => mem.load_u32(a.wrapping_add(b))?,
+                0x4 => mem.load_u8(a.wrapping_add(b))? as u32,
+                0x5 => mem.load_u16(a.wrapping_add(b))? as u32,
                 _ => return Err(Trap::InvalidInstruction(instr)),
             };
             cpu.set_reg(rd as usize, result);

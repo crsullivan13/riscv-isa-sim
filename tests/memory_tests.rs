@@ -14,6 +14,15 @@ fn u8_store_load_roundtrip() {
 }
 
 #[test]
+fn u16_store_load_roundtrip() {
+    let mut mem = mk_mem();
+    let addr = 0x1000;
+
+    mem.store_u16(addr, 0xFFFF).unwrap();
+    assert_eq!(mem.load_u16(addr).unwrap(), 0xFFFF);
+}
+
+#[test]
 fn u32_roundtrip() {
     let mut mem = mk_mem();
     let addr = 0x1000;

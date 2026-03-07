@@ -38,6 +38,28 @@ impl Memory {
         Ok(())
     }
 
+    pub fn load_u16(&self, addr: u32) -> Result<u16, Trap> {
+        if addr % 2 != 0 {
+            return Err(Trap::MisalignedLoad(addr));
+        }
+
+        let b1 = self.load_u8(addr)? as u16;
+        let b2 = self.load_u8(addr + 1)? as u16;
+
+        Ok((b2 << 8) | b1)
+    }
+
+    pub fn store_u16(&mut self, addr: u32, value: u16) -> Result<(), Trap> {
+        if addr % 2 != 0 {
+            return Err(Trap::MisalignedStore(addr));
+        }
+
+        self.store_u8(addr, (value & 0xff) as u8)?;
+        self.store_u8(addr + 1, ((value >> 8) & 0xff) as u8)?;
+
+        Ok(())
+    }
+
     pub fn load_u32(&self, addr: u32) -> Result<u32, Trap> {
         if addr % 4 != 0 {
             return Err(Trap::MisalignedLoad(addr));
