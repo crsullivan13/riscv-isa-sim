@@ -161,3 +161,39 @@ pub fn encode_store(op: Store, rs1: u32, rs2: u32, imm: i32) -> u32 {
         | imm_lower << 7
         | opcode
 }
+
+pub enum Branch {
+    BEQ,
+    BNE,
+    BLT,
+    BGE,
+    BLTU,
+    BGEU,
+}
+
+impl Branch {
+    pub fn funct(self) -> u32 {
+        match self {
+            Branch::BEQ  => 0x0,
+            Branch::BNE  => 0x1,
+            Branch::BLT  => 0x4,
+            Branch::BGE  => 0x5,
+            Branch::BLTU => 0x6,
+            Branch::BGEU => 0x7,
+        }
+    }
+}
+
+pub fn encode_branch(op: Branch, rs1: u32, rs2: u32, imm: i32) -> u32 {
+    let opcode = 0b110_0011;
+    let funct3 = op.funct();
+
+    assert_eq!(imm & 0x1, 0);
+    let imm_placed = ((imm & 0x1000) << 19 | (imm & 0x800) >> 4 | (imm & 0x7E0) << 20 | (imm & 0x1E) << 7) as u32;
+
+    imm_placed
+        | (rs2 & 0x1F) << 20
+        | (rs1 & 0x1F) << 15
+        | funct3 << 12
+        | opcode
+}

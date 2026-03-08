@@ -1,4 +1,4 @@
-use riscv_isa_sim::{encode_itype, encode_itype_shift, encode_load, encode_rtype, encode_store, step, Cpu, IType, ITypeShift, Load, Memory, RType, Store, Trap};
+use riscv_isa_sim::{encode_branch, encode_itype, encode_itype_shift, encode_load, encode_rtype, encode_store, step, Cpu, Branch, IType, ITypeShift, Load, Memory, RType, Store, Trap};
 
 // --- R-type ---
 
@@ -299,6 +299,140 @@ fn sw_executes() {
     mem.store_u32(0x0, encode_store(Store::SW, 1, 2, -4)).unwrap();
     step(&mut cpu, &mut mem).unwrap();
     assert_eq!(mem.load_u32(0x4).unwrap(), cpu.get_reg(2));
+}
+
+// --- Branches ---
+
+#[test]
+fn beq_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, 5);
+    cpu.set_reg(2, 5);
+    mem.store_u32(0x0, encode_branch(Branch::BEQ, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 8);
+}
+
+#[test]
+fn beq_not_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, 5);
+    cpu.set_reg(2, 6);
+    mem.store_u32(0x0, encode_branch(Branch::BEQ, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 4);
+}
+
+#[test]
+fn bne_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, 5);
+    cpu.set_reg(2, 6);
+    mem.store_u32(0x0, encode_branch(Branch::BNE, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 8);
+}
+
+#[test]
+fn bne_not_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, 5);
+    cpu.set_reg(2, 5);
+    mem.store_u32(0x0, encode_branch(Branch::BNE, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 4);
+}
+
+#[test]
+fn blt_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, (-1i32) as u32);
+    cpu.set_reg(2, 0);
+    mem.store_u32(0x0, encode_branch(Branch::BLT, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 8);
+}
+
+#[test]
+fn blt_not_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, 1);
+    cpu.set_reg(2, 0);
+    mem.store_u32(0x0, encode_branch(Branch::BLT, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 4);
+}
+
+#[test]
+fn bge_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, 5);
+    cpu.set_reg(2, 5);
+    mem.store_u32(0x0, encode_branch(Branch::BGE, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 8);
+}
+
+#[test]
+fn bge_not_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, (-1i32) as u32);
+    cpu.set_reg(2, 0);
+    mem.store_u32(0x0, encode_branch(Branch::BGE, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 4);
+}
+
+#[test]
+fn bltu_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, 1);
+    cpu.set_reg(2, 2);
+    mem.store_u32(0x0, encode_branch(Branch::BLTU, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 8);
+}
+
+#[test]
+fn bltu_not_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, 2);
+    cpu.set_reg(2, 1);
+    mem.store_u32(0x0, encode_branch(Branch::BLTU, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 4);
+}
+
+#[test]
+fn bgeu_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, 5);
+    cpu.set_reg(2, 5);
+    mem.store_u32(0x0, encode_branch(Branch::BGEU, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 8);
+}
+
+#[test]
+fn bgeu_not_taken() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(1, 1);
+    cpu.set_reg(2, 2);
+    mem.store_u32(0x0, encode_branch(Branch::BGEU, 1, 2, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.pc(), 4);
 }
 
 // --- Traps ---
