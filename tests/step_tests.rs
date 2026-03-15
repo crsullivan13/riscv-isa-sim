@@ -1,5 +1,4 @@
-use riscv_isa_sim::{encode_branch, encode_itype, encode_itype_shift, encode_load, encode_rtype, encode_store, step, Cpu, Branch, IType, ITypeShift, Load, Memory, RType, Store, Trap};
-use riscv_isa_sim::encode::{encode_jump, encode_itype_jump, ITypeJump, Jump};
+use riscv_isa_sim::{encode_branch, encode_itype, encode_itype_jump, encode_itype_shift, encode_jump, encode_load, encode_rtype, encode_store, step, Cpu, Branch, IType, ITypeJump, ITypeShift, Jump, Load, Memory, RType, Store, Trap};
 
 // --- R-type ---
 
