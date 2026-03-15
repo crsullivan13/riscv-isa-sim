@@ -1,4 +1,5 @@
 use riscv_isa_sim::{encode_branch, encode_itype, encode_itype_shift, encode_load, encode_rtype, encode_store, step, Cpu, Branch, IType, ITypeShift, Load, Memory, RType, Store, Trap};
+use riscv_isa_sim::encode::{encode_jump, encode_itype_jump, ITypeJump, Jump};
 
 // --- R-type ---
 
@@ -433,6 +434,52 @@ fn bgeu_not_taken() {
     mem.store_u32(0x0, encode_branch(Branch::BGEU, 1, 2, 8)).unwrap();
     step(&mut cpu, &mut mem).unwrap();
     assert_eq!(cpu.pc(), 4);
+}
+
+// --- Jumps ---
+
+#[test]
+fn jal_executes() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    mem.store_u32(0x0, encode_jump(Jump::JAL, 1, 8)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.get_reg(1), 4);
+    assert_eq!(cpu.pc(), 8);
+}
+
+#[test]
+fn jal_neg_executes() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x4);
+    cpu.set_pc(0x4);
+    mem.store_u32(0x4, encode_jump(Jump::JAL, 1, -4)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.get_reg(1), 8);
+    assert_eq!(cpu.pc(), 0);
+}
+
+#[test]
+fn jalr_executes() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x0);
+    cpu.set_reg(5, 12);
+    mem.store_u32(0x0, encode_itype_jump(ITypeJump::JALR, 1, 5, 4)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.get_reg(1), 4);
+    assert_eq!(cpu.pc(), 16);
+}
+
+#[test]
+fn jalr_neg_executes() {
+    let mut cpu = Cpu::new();
+    let mut mem = Memory::new(64, 0x4);
+    cpu.set_pc(0x4);
+    cpu.set_reg(5, 12);
+    mem.store_u32(0x4, encode_itype_jump(ITypeJump::JALR, 1, 5, -3)).unwrap();
+    step(&mut cpu, &mut mem).unwrap();
+    assert_eq!(cpu.get_reg(1), 8);
+    assert_eq!(cpu.pc(), 8);
 }
 
 // --- Traps ---

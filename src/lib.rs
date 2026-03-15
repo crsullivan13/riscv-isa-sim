@@ -103,7 +103,24 @@ pub fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
                 0x7 => a >= b,
                 _ => return Err(Trap::InvalidInstruction(instr)),
             };
-            if result { cpu.set_pc(cpu.pc() + imm); } else { cpu.set_pc( pc_next ); }
+            if result { cpu.set_pc(cpu.pc().wrapping_add(imm)); } else { cpu.set_pc( pc_next ); }
+        }
+        0b110_1111 => {
+            let imm = j_imm(instr);
+            println!("{}", imm as i32);
+            cpu.set_reg(rd as usize, pc_next);
+            cpu.set_pc(cpu.pc().wrapping_add(imm));
+        }
+        0b110_0111 => {
+            let a = cpu.get_reg(rs1 as usize);
+            let imm = i_imm(instr);
+            match funct3 {
+                0x0 => {
+                    cpu.set_reg(rd as usize, pc_next);
+                    cpu.set_pc((a.wrapping_add(imm)) & 0xFFFF_FFFE);
+                },
+                _ => return Err(Trap::InvalidInstruction(instr)),
+            }
         }
         _ => return Err(Trap::InvalidInstruction(instr)),
     }
@@ -123,4 +140,9 @@ fn s_imm(instr: u32) -> u32 {
 fn b_imm(instr: u32) -> u32 {
     let imm = (instr & 0x8000_0000) | ((instr & 0x0000_0080) << 23) | ((instr & 0x7E00_0000) >> 1) | ((instr & 0x0000_0F00) << 12);
     ((imm as i32) >> 19) as u32
+}
+
+fn j_imm(instr: u32) -> u32 {
+    let imm = (instr & 0x8000_0000) | ((instr & 0x000F_F000) << 11) | ((instr & 0x0010_0000) << 2) | ((instr & 0x7FE0_0000) >> 9);
+    ((imm as i32) >> 11) as u32
 }

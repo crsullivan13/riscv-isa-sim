@@ -78,6 +78,18 @@ impl ITypeShift {
     }
 }
 
+pub enum ITypeJump {
+    JALR,
+}
+
+impl ITypeJump {
+    pub fn funct(self) -> u32 {
+        match self {
+            ITypeJump::JALR => 0x0,
+        }
+    }
+}
+
 pub fn encode_itype(op: IType, rs1: u32, imm: i32, rd: u32) -> u32 {
     let opcode = 0b001_0011;
     let funct3 = op.funct();
@@ -95,6 +107,17 @@ pub fn encode_itype_shift(op: ITypeShift, rs1: u32, shamt: u32, rd: u32) -> u32 
 
     funct7 << 25
         | (shamt & 0x1F) << 20
+        | (rs1 & 0x1F) << 15
+        | funct3 << 12
+        | (rd & 0x1F) << 7
+        | opcode
+}
+
+pub fn encode_itype_jump(op: ITypeJump, rd: u32, rs1: u32, imm: i32) -> u32 {
+    let opcode = 0b110_0111;
+    let funct3 = op.funct();
+
+    ((imm as u32) & 0xFFF) << 20
         | (rs1 & 0x1F) << 15
         | funct3 << 12
         | (rd & 0x1F) << 7
@@ -195,5 +218,20 @@ pub fn encode_branch(op: Branch, rs1: u32, rs2: u32, imm: i32) -> u32 {
         | (rs2 & 0x1F) << 20
         | (rs1 & 0x1F) << 15
         | funct3 << 12
+        | opcode
+}
+
+pub enum Jump {
+    JAL,
+}
+
+pub fn encode_jump(_op: Jump, rd: u32, imm: i32) -> u32 {
+    let opcode = 0b110_1111;
+
+    assert_eq!(imm & 0x1, 0);
+    let imm_placed = ((imm & 0x10_0000) << 11 | imm & 0xF_F000 | (imm & 0x800) << 9 | (imm & 0x7FE) << 20) as u32;
+
+    imm_placed
+        | (rd & 0x1F) << 7
         | opcode
 }
