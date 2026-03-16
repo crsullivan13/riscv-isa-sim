@@ -5,4 +5,6 @@ pub enum Trap {
     MisalignedStore(u32),
     OutOfBounds(u32),
     InvalidInstruction(u32),
+    EBreak(u32),
+    ECall(u32),
 }

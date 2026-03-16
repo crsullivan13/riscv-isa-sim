@@ -122,6 +122,19 @@ pub fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
                 _ => return Err(Trap::InvalidInstruction(instr)),
             }
         }
+        0b111_0011 => {
+            let imm = i_imm(instr);
+            match funct3 {
+                0x0 => {
+                    match imm {
+                        0 => return Err(Trap::EBreak(instr)),
+                        1 => return Err(Trap::ECall(instr)),
+                        _ => return Err(Trap::InvalidInstruction(instr))
+                    }
+                }
+                _ => return Err(Trap::InvalidInstruction(instr)),
+            }
+        }
         _ => return Err(Trap::InvalidInstruction(instr)),
     }
 
