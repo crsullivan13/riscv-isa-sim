@@ -1,0 +1,3 @@
+[submodule "rv32i-tests"]
+	path = rv32i-tests
+	url = git@github.com:crsullivan13/rv32i-tests.git

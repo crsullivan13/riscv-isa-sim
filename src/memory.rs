@@ -1,5 +1,6 @@
 use crate::trap::Trap;
 
+#[derive(Debug)]
 pub struct Memory {
     data_array: Vec<u8>,
     base: u32,

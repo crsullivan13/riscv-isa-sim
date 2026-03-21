@@ -2,6 +2,7 @@ pub mod cpu;
 pub mod encode;
 pub mod memory;
 pub mod trap;
+pub mod elf_parser;
 
 pub use cpu::Cpu;
 pub use encode::{encode_branch, encode_itype, encode_itype_jump, encode_itype_shift, encode_jump, encode_load, encode_rtype, encode_store, Branch, IType, ITypeJump, ITypeShift, Jump, Load, RType, Store};
@@ -107,7 +108,6 @@ pub fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
         }
         0b110_1111 => {
             let imm = j_imm(instr);
-            println!("{}", imm as i32);
             cpu.set_reg(rd as usize, pc_next);
             cpu.set_pc(cpu.pc().wrapping_add(imm));
         }
@@ -127,8 +127,8 @@ pub fn step(cpu: &mut Cpu, mem: &mut Memory) -> Result<(), Trap> {
             match funct3 {
                 0x0 => {
                     match imm {
-                        0 => return Err(Trap::EBreak(instr)),
-                        1 => return Err(Trap::ECall(instr)),
+                        0 => return Err(Trap::ECall(instr)),
+                        1 => return Err(Trap::EBreak(instr)),
                         _ => return Err(Trap::InvalidInstruction(instr))
                     }
                 }
